@@ -136,10 +136,10 @@ class KIMODO_PT_main(Panel):
         box.label(text="目标角色", icon="ARMATURE_DATA")
         target = context.active_object
         if target is None or target.type != "ARMATURE":
-            box.label(text="请选中一个骨架 (Armature)", icon="ERROR")
+            box.label(text="请选中一个骨架对象", icon="ERROR")
         elif len(target.data.bones) < 15:
             box.label(
-                text=f"骨架骨骼过少 ({len(target.data.bones)}): 非人形 rig?",
+                text=f"骨架骨骼过少（{len(target.data.bones)} 根），可能不是人形骨架",
                 icon="ERROR",
             )
         else:
@@ -167,7 +167,7 @@ class KIMODO_PT_main(Panel):
             }.get(prefs.translate_mode, prefs.translate_mode)
             box.label(text=f"中文翻译: {mode_label}", icon="OUTLINER_DATA_FONT")
         if note:
-            icon = "ERROR" if note.startswith("warning") else "CHECKMARK"
+            icon = "ERROR" if note.startswith("警告") else "CHECKMARK"
             box.label(text=note, icon=icon)
         # 时长（Kimodo 官方 2-10s @ 30fps；帧数后台自动算）
         row = box.row(align=True)
@@ -208,7 +208,7 @@ class KIMODO_PT_main(Panel):
 
 
 class KIMODO_PT_actions(Panel):
-    bl_label = "已生成的 Action"
+    bl_label = "已生成的动作"
     bl_idname = "KIMODO_PT_actions"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
@@ -226,7 +226,7 @@ class KIMODO_PT_actions(Panel):
 
         kimodo_actions = [a for a in bpy.data.actions if a.name.startswith("Kimodo_")]
         if not kimodo_actions:
-            layout.label(text="还没有生成过 Action", icon="INFO")
+            layout.label(text="还没有生成过动作", icon="INFO")
             return
 
         active_action = (
@@ -249,7 +249,7 @@ class KIMODO_PT_actions(Panel):
             op_switch.action_name = action.name
 
             end_f = int(action.frame_range[1])
-            row.label(text=f"{end_f}f")
+            row.label(text=f"{end_f} 帧")
 
             op_del = row.operator("kimodo.delete_action", text="", icon="TRASH")
             op_del.action_name = action.name
@@ -296,11 +296,11 @@ class KIMODO_PT_constraints(Panel):
         row.operator("kimodo.clear_constraints", text="", icon="TRASH")
         quick = box.row(align=True)
         for ctype, label in (
-            ("root2d", "Root"),
-            ("left_hand", "L.Hand"),
-            ("right_hand", "R.Hand"),
-            ("left_foot", "L.Foot"),
-            ("right_foot", "R.Foot"),
+            ("root2d", "根节点"),
+            ("left_hand", "左手"),
+            ("right_hand", "右手"),
+            ("left_foot", "左脚"),
+            ("right_foot", "右脚"),
         ):
             op = quick.operator("kimodo.add_constraint_marker", text=label)
             op.constraint_type = ctype

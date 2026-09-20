@@ -510,8 +510,8 @@ if ($DryRun) {
     Write-Log "Log:    $LOG_PATH" -Level OK
     Write-Log ""
     Write-Log "Next steps:" -Level STEP
-    Write-Log "  1. Open Blender, enable 'Kimodo Motion' addon"
-    Write-Log "  2. Edit > Preferences > Add-ons > Kimodo Motion > venv path = $VENV_PATH"
+    Write-Log "  1. 打开 Blender，启用 'kimodo_motion_cn' 插件"
+    Write-Log "  2. 编辑 > 偏好设置 > 插件 > kimodo_motion_cn > 虚拟环境路径 = $VENV_PATH"
     Write-Log "  3. First generation will download ~16GB LLaMA-3-8B text encoder"
     Write-Log "     (requires HuggingFace account with access to meta-llama/Meta-Llama-3-8B-Instruct)"
     Write-Log "     Run: $VPy -m huggingface_hub.commands.huggingface_cli login"

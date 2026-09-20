@@ -23,7 +23,7 @@
 
 ## 2. 安装插件（扩展）
 
-`Blender > Edit > Preferences > Get Extensions / Add-ons > Install from Disk…` 选 `kimodo_motion.zip` 并启用。
+`Blender > Edit > Preferences > Get Extensions / Add-ons > Install from Disk…` 选 `kimodo_motion_cn.zip` 并启用。
 插件以 Blender 扩展（`blender_manifest.toml`）形式发布，要求 Blender 5.0+。
 
 ---
@@ -59,7 +59,7 @@ powershell -ExecutionPolicy Bypass -File installer\install.ps1 -Proxy http://127
 **命令行方式（推荐，运行时放在可见目录，删一个目录即清）**：
 
 ```bash
-cd /path/to/kimodo_motion
+cd /path/to/kimodo_motion_cn
 KIMODO_VENV="$HOME/KimodoMotionRuntime/venv" bash installer/install_mac.sh
 ```
 

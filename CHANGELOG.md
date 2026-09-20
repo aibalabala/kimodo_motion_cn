@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1] — 2026-09-20 — 中文化版本
+
+- 扩展标识与发布包名称更新为 `kimodo_motion_cn`。
+- 完成 Blender 面板、属性、按钮、提示、错误信息和安装检查信息的中文化。
+- 保留 API 参数、内部运算标识和骨骼数据键名，避免影响生成与重定向功能。
+- 项目主页更新为 <https://github.com/aibalabala/kimodo_motion_cn>。
+
 All notable changes to the **Blender Kimodo Motion** addon.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);

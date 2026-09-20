@@ -81,27 +81,27 @@ def _probe_endpoint(url: str, timeout: float = 5.0) -> bool:
 def _pick_mirror(forced: str | None) -> str:
     if forced and forced != "auto":
         if forced not in MIRRORS:
-            raise SystemExit(f"Unknown mirror: {forced}")
+            raise SystemExit(f"未知镜像：{forced}")
         if MIRRORS[forced] is None:
-            raise SystemExit(f"Mirror {forced} not yet supported")
+            raise SystemExit(f"暂不支持镜像：{forced}")
         return forced
     # Auto: try hf → hf-mirror
-    _log("Probing huggingface.co ...", "STEP")
+    _log("正在检测 huggingface.co 连通性…", "STEP")
     if _probe_endpoint("https://huggingface.co", timeout=4):
-        _log("huggingface.co reachable", "OK")
+        _log("huggingface.co 可访问", "OK")
         return "hf"
-    _log("huggingface.co unreachable, trying hf-mirror.com ...", "WARN")
+    _log("huggingface.co 无法访问，正在尝试 hf-mirror.com…", "WARN")
     if _probe_endpoint("https://hf-mirror.com", timeout=4):
-        _log("hf-mirror.com reachable", "OK")
+        _log("hf-mirror.com 可访问", "OK")
         return "hf-mirror"
-    _log("No mirror reachable. Check proxy / network.", "ERROR")
+    _log("所有镜像均无法访问，请检查代理或网络。", "ERROR")
     raise SystemExit(2)
 
 
 def _ensure_env(mirror: str) -> None:
     endpoint = MIRRORS[mirror]
     if endpoint is None:
-        raise SystemExit(f"Mirror {mirror} has no endpoint")
+        raise SystemExit(f"镜像 {mirror} 没有可用地址")
     os.environ["HF_ENDPOINT"] = endpoint
     _log(f"HF_ENDPOINT={endpoint}", "OK")
 
@@ -118,14 +118,14 @@ def _hf_snapshot_download(repo_id: str, allow_gated: bool = False) -> Path:
             RepositoryNotFoundError,
         )
     except ImportError as e:
-        _log(f"huggingface_hub not installed: {e}", "ERROR")
-        _log("Run the installer first: installer/install.ps1", "ERROR")
+        _log(f"未安装 huggingface_hub：{e}", "ERROR")
+        _log("请先运行安装程序：installer/install.ps1", "ERROR")
         raise SystemExit(3)
 
     last_err: Exception | None = None
     for attempt in range(3):
         try:
-            _log(f"snapshot_download({repo_id})  [attempt {attempt + 1}/3]", "STEP")
+            _log(f"下载 {repo_id}（第 {attempt + 1}/3 次尝试）", "STEP")
             local_dir = snapshot_download(
                 repo_id=repo_id,
                 token=os.environ.get("HF_TOKEN") or True,
@@ -135,7 +135,7 @@ def _hf_snapshot_download(repo_id: str, allow_gated: bool = False) -> Path:
             return Path(local_dir)
         except GatedRepoError as e:
             _log(
-                f"{repo_id} is gated. Login + accept terms: "
+                f"{repo_id} 是受限模型。请登录并接受使用条款："
                 f"https://huggingface.co/{repo_id}",
                 "ERROR",
             )
@@ -144,16 +144,16 @@ def _hf_snapshot_download(repo_id: str, allow_gated: bool = False) -> Path:
             last_err = e
             break
         except RepositoryNotFoundError as e:
-            _log(f"Repo not found: {repo_id} — {e}", "ERROR")
+            _log(f"找不到模型仓库：{repo_id} — {e}", "ERROR")
             raise
         except Exception as e:  # noqa: BLE001
             last_err = e
             wait = 2**attempt * 5
             _log(
-                f"Download failed ({type(e).__name__}: {e}) — retry in {wait}s", "WARN"
+                f"下载失败（{type(e).__name__}：{e}）— {wait} 秒后重试", "WARN"
             )
             time.sleep(wait)
-    raise RuntimeError(f"Failed after 3 attempts: {last_err}")
+    raise RuntimeError(f"尝试 3 次后仍然失败：{last_err}")
 
 
 def _check_cached(repo_id: str) -> tuple[bool, float]:
@@ -174,7 +174,7 @@ def _check_cached(repo_id: str) -> tuple[bool, float]:
 
 def main() -> int:
     ap = argparse.ArgumentParser(
-        description="Download Kimodo SOMA + LLaMA-3-8B with mirror fallback"
+        description="下载 Kimodo SOMA 与 LLaMA-3-8B，失败时自动切换镜像"
     )
     ap.add_argument(
         "--mirror",
@@ -185,20 +185,20 @@ def main() -> int:
         "--model",
         choices=list(KIMODO_REPOS.keys()) + ["all"],
         default="SOMA-RP-v1",
-        help="Which Kimodo variant to download (default: SOMA-RP-v1)",
+        help="要下载的 Kimodo 模型版本（默认：SOMA-RP-v1）",
     )
     ap.add_argument("--skip-llama", action="store_true")
-    ap.add_argument("--check", action="store_true", help="Report-only, no download")
+    ap.add_argument("--check", action="store_true", help="只检查并报告，不下载")
     args = ap.parse_args()
 
-    _log("========= Kimodo model download =========", "STEP")
+    _log("========= Kimodo 模型下载 =========", "STEP")
 
     # Disk check
     try:
         free = shutil.disk_usage(str(Path.home())).free / (1024**3)
-        _log(f"Free disk: {free:.1f} GB", "OK" if free > 30 else "WARN")
+        _log(f"磁盘可用空间：{free:.1f} GB", "OK" if free > 30 else "WARN")
         if free < 25 and not args.check:
-            _log("Need ~17GB free. Aborting.", "ERROR")
+            _log("需要约 17 GB 可用空间，下载已中止。", "ERROR")
             return 4
     except OSError:
         pass
@@ -225,50 +225,50 @@ def main() -> int:
     for repo in kimodo_targets:
         cached, gb = _check_cached(repo)
         if cached:
-            _log(f"{repo} already cached ({gb} GB) — skip", "OK")
+            _log(f"{repo} 已缓存（{gb} GB），跳过", "OK")
             continue
-        _log(f"Downloading {repo} ...", "STEP")
+        _log(f"正在下载 {repo}…", "STEP")
         try:
             path = _hf_snapshot_download(repo)
             _log(f"{repo} -> {path}", "OK")
         except Exception as e:  # noqa: BLE001
-            _log(f"Failed to get {repo}: {e}", "ERROR")
+            _log(f"下载 {repo} 失败：{e}", "ERROR")
             return 5
 
     # LLaMA (gated)
     if args.skip_llama:
         _log(
-            "Skipping LLaMA (--skip-llama). Kimodo WILL fail at inference time!", "WARN"
+            "已跳过 LLaMA（--skip-llama）。Kimodo 推理时将无法正常运行！", "WARN"
         )
     else:
         cached, gb = _check_cached(LLAMA_REPO)
         if cached:
-            _log(f"{LLAMA_REPO} already cached ({gb} GB) — skip", "OK")
+            _log(f"{LLAMA_REPO} 已缓存（{gb} GB），跳过", "OK")
         else:
             if (
                 not os.environ.get("HF_TOKEN")
                 and not (Path.home() / ".cache" / "huggingface" / "token").is_file()
             ):
-                _log("HF_TOKEN not set and no saved token.", "ERROR")
+                _log("未设置 HF_TOKEN，也没有找到已保存的访问令牌。", "ERROR")
                 _log(
-                    "Login: python -m huggingface_hub.commands.huggingface_cli login",
+                    "请登录：python -m huggingface_hub.commands.huggingface_cli login",
                     "ERROR",
                 )
                 _log(
-                    "Also accept terms at: "
+                    "还需在此页面接受使用条款："
                     "https://huggingface.co/meta-llama/Meta-Llama-3-8B-Instruct",
                     "ERROR",
                 )
                 return 6
-            _log(f"Downloading {LLAMA_REPO} (~16GB, may take 30+ min) ...", "STEP")
+            _log(f"正在下载 {LLAMA_REPO}（约 16 GB，可能需要 30 分钟以上）…", "STEP")
             try:
                 path = _hf_snapshot_download(LLAMA_REPO)
                 _log(f"{LLAMA_REPO} -> {path}", "OK")
             except Exception as e:  # noqa: BLE001
-                _log(f"Failed to get LLaMA: {e}", "ERROR")
+                _log(f"下载 LLaMA 失败：{e}", "ERROR")
                 return 7
 
-    _log("=========  Done  =========", "OK")
+    _log("=========  下载完成  =========", "OK")
     return 0
 
 

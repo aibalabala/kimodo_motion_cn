@@ -25,7 +25,7 @@
 ## 2. Install the add-on (extension)
 
 `Blender > Edit > Preferences > Get Extensions / Add-ons > Install from Disk…`, choose
-`kimodo_motion.zip`, and enable it. The add-on is a Blender Extension
+`kimodo_motion_cn.zip`, and enable it. The add-on is a Blender Extension
 (`blender_manifest.toml`) and requires Blender 5.0+.
 
 ---
@@ -62,7 +62,7 @@ Double-click launcher: `installer\install.cmd`.
 **Command line (recommended — keep the runtime in a visible folder; delete one dir to remove):**
 
 ```bash
-cd /path/to/kimodo_motion
+cd /path/to/kimodo_motion_cn
 KIMODO_VENV="$HOME/KimodoMotionRuntime/venv" bash installer/install_mac.sh
 ```
 

@@ -160,7 +160,7 @@ def _is_mixamo_like_armature(arm_obj) -> bool:
 class KIMODO_OT_generate(Operator):
     bl_idname = "kimodo.generate"
     bl_label = "生成并应用到选中骨架"
-    bl_description = "从文字生成动作，自动 retarget 到当前选中的骨架，创建为新 Action"
+    bl_description = "根据文字生成动作，自动重定向到当前选中的骨架，并创建新动作"
     bl_options = {"REGISTER", "UNDO"}
 
     _thread: threading.Thread = None
@@ -184,7 +184,7 @@ class KIMODO_OT_generate(Operator):
         scene = context.scene
         target_arm = context.active_object
         if not _is_mixamo_like_armature(target_arm):
-            self.report({"ERROR"}, "请先选中目标角色骨架（Armature）")
+            self.report({"ERROR"}, "请先选中目标角色的骨架对象")
             return {"CANCELLED"}
 
         prefs = get_prefs()
@@ -218,7 +218,7 @@ class KIMODO_OT_generate(Operator):
         if note:
             scene.kimodo_translation_note = note
             # ERROR/warning uses WARNING report, success uses INFO
-            level = "WARNING" if note.startswith("warning") else "INFO"
+            level = "WARNING" if note.startswith("警告") else "INFO"
             self.report({level}, note)
         else:
             scene.kimodo_translation_note = ""
@@ -414,7 +414,7 @@ class KIMODO_OT_generate(Operator):
             return {"CANCELLED"}
 
         if not actions:
-            self.report({"ERROR"}, "重定向未生成任何 Action")
+            self.report({"ERROR"}, "重定向未生成任何动作")
             return {"CANCELLED"}
 
         # Set scene frame range + fps from first action (Kimodo 固定 30 fps)
@@ -427,9 +427,9 @@ class KIMODO_OT_generate(Operator):
         context.scene.render.fps_base = 1.0
 
         msg = (
-            f"完成: {len(actions)} 个 Action 已应用到 {target_arm.name}"
+            f"完成：{len(actions)} 个动作已应用到 {target_arm.name}"
             if len(actions) > 1
-            else f"完成: Action '{first_action.name}' 已应用到 {target_arm.name}"
+            else f"完成：动作“{first_action.name}”已应用到 {target_arm.name}"
         )
         for warning in cls._result.get("warnings") or []:
             self.report({"WARNING"}, str(warning))
@@ -710,7 +710,7 @@ class KIMODO_OT_preview_constraints_json(Operator):
                 auto_canonicalize=bool(scene.kimodo_auto_canonicalize),
             )
             scene.kimodo_constraint_json_preview = json.dumps(result.constraints, indent=2)
-            self.report({"INFO"}, f"约束 JSON: {len(result.constraints)} 个 block")
+            self.report({"INFO"}, f"约束 JSON：{len(result.constraints)} 个数据块")
             return {"FINISHED"}
         except Exception as e:
             self.report({"ERROR"}, f"约束 JSON 构建失败: {e}")
@@ -720,7 +720,7 @@ class KIMODO_OT_preview_constraints_json(Operator):
 class KIMODO_OT_create_soma_proxy(Operator):
     bl_idname = "kimodo.create_soma_proxy"
     bl_label = "创建 SOMA 约束骨架"
-    bl_description = "创建用于 fullbody/手脚约束的 SOMA proxy armature"
+    bl_description = "创建用于全身和手脚约束的 SOMA 代理骨架"
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
@@ -735,7 +735,7 @@ class KIMODO_OT_create_soma_proxy(Operator):
 class KIMODO_OT_add_motion_segment(Operator):
     bl_idname = "kimodo.add_motion_segment"
     bl_label = "添加动作分段"
-    bl_description = "按当前 prompt 和帧范围添加一个 multi-prompt 分段"
+    bl_description = "按当前提示词和帧范围添加一个多提示词动作分段"
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
@@ -761,7 +761,7 @@ class KIMODO_OT_add_motion_segment(Operator):
 class KIMODO_OT_clear_motion_segments(Operator):
     bl_idname = "kimodo.clear_motion_segments"
     bl_label = "清空动作分段"
-    bl_description = "清空 multi-prompt 动作分段"
+    bl_description = "清空多提示词动作分段"
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
@@ -775,8 +775,8 @@ class KIMODO_OT_clear_motion_segments(Operator):
 
 class KIMODO_OT_switch_action(Operator):
     bl_idname = "kimodo.switch_action"
-    bl_label = "切换到此 Action"
-    bl_description = "把选中的 Kimodo Action 设为当前激活"
+    bl_label = "切换到此动作"
+    bl_description = "把选中的 Kimodo 动作设为当前激活动作"
     bl_options = {"REGISTER", "UNDO"}
 
     action_name: bpy.props.StringProperty()
@@ -789,7 +789,7 @@ class KIMODO_OT_switch_action(Operator):
         arm = context.active_object
         action = bpy.data.actions.get(self.action_name)
         if action is None:
-            self.report({"ERROR"}, f"Action 不存在: {self.action_name}")
+            self.report({"ERROR"}, f"动作不存在：{self.action_name}")
             return {"CANCELLED"}
         if arm.animation_data is None:
             arm.animation_data_create()
@@ -804,8 +804,8 @@ class KIMODO_OT_switch_action(Operator):
 
 class KIMODO_OT_delete_action(Operator):
     bl_idname = "kimodo.delete_action"
-    bl_label = "删除 Action"
-    bl_description = "从 Blender 数据中删除此 Action"
+    bl_label = "删除动作"
+    bl_description = "从 Blender 数据中删除此动作"
     bl_options = {"REGISTER", "UNDO"}
 
     action_name: bpy.props.StringProperty()
@@ -813,7 +813,7 @@ class KIMODO_OT_delete_action(Operator):
     def execute(self, context):
         action = bpy.data.actions.get(self.action_name)
         if action is None:
-            self.report({"WARNING"}, f"Action 已不存在: {self.action_name}")
+            self.report({"WARNING"}, f"动作已不存在：{self.action_name}")
             return {"CANCELLED"}
 
         # If currently active on any armature, clear it

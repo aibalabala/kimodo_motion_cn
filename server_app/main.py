@@ -18,7 +18,7 @@ from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-app = FastAPI(title="Kimodo Motion Server", version="0.1.0")
+app = FastAPI(title="kimodo_motion_cn 本地推理服务器", version="0.1.0")
 
 # ── Global state ──
 _model = None

@@ -59,7 +59,7 @@ def _get_fetched_models_items(self, context):
     """EnumProperty items callback — parses cache string into dropdown items."""
     cache = self.translate_model_cache or ""
     if not cache:
-        return [("", "(未拉取)", "先点 Fetch 拉取模型列表")]
+        return [("", "(未拉取)", "先点“拉取”获取模型列表")]
     items = []
     for i, m in enumerate(cache.split("|")):
         m = m.strip()
@@ -115,12 +115,12 @@ class KimodoConstraintItem(PropertyGroup):
     constraint_type: EnumProperty(
         name="类型",
         items=[
-            ("root2d", "Root XZ", "约束角色根节点在地面的路径/路点"),
-            ("fullbody", "Full Body", "SOMA proxy 全身姿态约束"),
-            ("left_hand", "L Hand", "左手目标"),
-            ("right_hand", "R Hand", "右手目标"),
-            ("left_foot", "L Foot", "左脚目标"),
-            ("right_foot", "R Foot", "右脚目标"),
+            ("root2d", "根节点 XZ", "约束角色根节点在地面的路径或路点"),
+            ("fullbody", "全身", "SOMA 代理骨架的全身姿态约束"),
+            ("left_hand", "左手", "左手目标"),
+            ("right_hand", "右手", "右手目标"),
+            ("left_foot", "左脚", "左脚目标"),
+            ("right_foot", "右脚", "右脚目标"),
         ],
         default="root2d",
     )
@@ -132,7 +132,7 @@ class KimodoConstraintItem(PropertyGroup):
 
 
 class KimodoMotionSegment(PropertyGroup):
-    prompt: StringProperty(name="Prompt", default="A person walks forward.")
+    prompt: StringProperty(name="提示词", default="A person walks forward.")
     start_frame: IntProperty(name="开始帧", default=1, min=0)
     end_frame: IntProperty(name="结束帧", default=180, min=1)
     enabled: BoolProperty(name="启用", default=True)
@@ -142,7 +142,7 @@ class KimodoMotionSegment(PropertyGroup):
 class KimodoPreferences(AddonPreferences):
     # Must equal the add-on's package name. As a submodule of the add-on root this
     # module's __package__ is exactly that — works whether loaded as a legacy add-on
-    # ("kimodo_motion") or an extension ("bl_ext.<repo>.kimodo_motion").
+    # ("kimodo_motion_cn") or an extension ("bl_ext.<repo>.kimodo_motion_cn").
     bl_idname = __package__
 
     server_host: StringProperty(
@@ -186,7 +186,7 @@ class KimodoPreferences(AddonPreferences):
         default=60,
         min=10,
         max=600,
-        description="FBX 重定向 subprocess 超时（每个 sample）",
+        description="每个动作样本进行 FBX 重定向时的子进程超时时间",
     )
     keep_retarget_temp: BoolProperty(
         name="保留临时文件",
@@ -198,7 +198,7 @@ class KimodoPreferences(AddonPreferences):
     translate_mode: EnumProperty(
         name="中文翻译",
         items=[
-            ("OFF", "关闭", "prompt 原样提交（Kimodo 英文效果最佳）"),
+            ("OFF", "关闭", "提示词原样提交（Kimodo 的英文提示词效果最佳）"),
             (
                 "DICT",
                 "仅词典（瞬时）",
@@ -211,7 +211,7 @@ class KimodoPreferences(AddonPreferences):
             ),
         ],
         default="DICT",
-        description="如何处理中文 prompt",
+        description="如何处理中文提示词",
     )
     translate_provider: EnumProperty(
         name="API 预设",
@@ -221,19 +221,19 @@ class KimodoPreferences(AddonPreferences):
             ("moonshot", "Moonshot (Kimi)", "https://api.moonshot.cn/v1"),
             ("qwen", "Qwen (DashScope)", "https://dashscope.aliyuncs.com"),
             ("openai", "OpenAI", "https://api.openai.com/v1"),
-            ("custom", "自定义", "手动填写 Base URL"),
+            ("custom", "自定义", "手动填写基础地址"),
         ],
         default="deepseek",
-        description="选择后自动填入 Base URL 和推荐模型（可 Fetch 拉取完整列表）",
+        description="选择后自动填入基础地址和推荐模型（可点“拉取”获取完整列表）",
         update=lambda self, ctx: _apply_provider_preset(self),
     )
     translate_api_url: StringProperty(
-        name="API Base URL",
+        name="API 基础地址",
         default="https://api.deepseek.com/v1",
         description="OpenAI 兼容的 API 基础地址",
     )
     translate_api_key: StringProperty(
-        name="API Key",
+        name="API 密钥",
         default="",
         subtype="PASSWORD",
         description="从对应服务商控制台获取",
@@ -241,13 +241,13 @@ class KimodoPreferences(AddonPreferences):
     translate_model: StringProperty(
         name="模型",
         default="deepseek-chat",
-        description="模型名；点 Fetch 从 API 拉取可用列表",
+        description="模型名称；点“拉取”从 API 获取可用模型列表",
     )
     translate_model_cache: StringProperty(
         name="_cache",
         default="",
         options={"HIDDEN"},
-        description="Fetched model list cache (| separated)",
+        description="已拉取的模型列表缓存（用竖线分隔）",
     )
     translate_model_pick: EnumProperty(
         name="选择模型",
@@ -265,7 +265,7 @@ class KimodoPreferences(AddonPreferences):
         name="_status",
         default="",
         options={"HIDDEN"},
-        description="Last test/fetch status (shown in draw)",
+        description="最近一次测试或拉取状态（显示在设置界面）",
     )
 
     def draw(self, context):
@@ -300,7 +300,7 @@ class KimodoPreferences(AddonPreferences):
             row = sub.row(align=True)
             row.prop(self, "translate_model")
             row.operator(
-                "kimodo.translate_fetch_models", text="Fetch", icon="FILE_REFRESH"
+                "kimodo.translate_fetch_models", text="拉取", icon="FILE_REFRESH"
             )
             # Fetched-models picker (只在有缓存时显示)
             if self.translate_model_cache:
@@ -311,7 +311,7 @@ class KimodoPreferences(AddonPreferences):
             if self.translate_status:
                 box.label(text=self.translate_status, icon="INFO")
             box.label(
-                text="填完 API Key 后请点右下角菜单 > Save Preferences (重启不丢)",
+                text="填写 API 密钥后，请点右下角菜单 > 保存偏好设置（重启后保留）",
                 icon="FILE_TICK",
             )
 
@@ -401,7 +401,7 @@ def register_props():
         name="起始帧",
         default=0,
         min=0,
-        description="生成 Action 写入的起始帧；约束/曲线会以此作为 Kimodo 第 0 帧",
+        description="生成的动作写入时间线的起始帧；约束和曲线以此作为 Kimodo 第 0 帧",
     )
     bpy.types.Scene.kimodo_enable_constraints = BoolProperty(
         name="启用约束",
@@ -419,7 +419,7 @@ def register_props():
     bpy.types.Scene.kimodo_auto_canonicalize = BoolProperty(
         name="自动规范原点",
         default=True,
-        description="将最早的 root/fullbody 约束点作为 Kimodo XZ 原点",
+        description="将最早的根节点或全身约束点作为 Kimodo XZ 原点",
     )
     bpy.types.Scene.kimodo_post_processing = BoolProperty(
         name="官方后处理",
@@ -431,33 +431,33 @@ def register_props():
         ),
     )
     bpy.types.Scene.kimodo_text_cfg = FloatProperty(
-        name="Text CFG",
+        name="文字引导强度",
         default=2.0,
         min=0.0,
         max=20.0,
         description="文字提示引导强度",
     )
     bpy.types.Scene.kimodo_constraint_cfg = FloatProperty(
-        name="Constraint CFG",
+        name="约束引导强度",
         default=2.0,
         min=0.0,
         max=20.0,
         description="约束引导强度",
     )
     bpy.types.Scene.kimodo_root_margin = FloatProperty(
-        name="Root Margin",
+        name="根节点容差",
         default=0.04,
         min=0.0,
         max=1.0,
         precision=3,
-        description="Kimodo motion_correction 官方后处理的 root 容差（米）；后处理关闭或不可用时不生效",
+        description="Kimodo 官方动作修正后处理的根节点容差（米）；后处理关闭或不可用时不生效",
     )
     bpy.types.Scene.kimodo_num_transition_frames = IntProperty(
         name="过渡帧",
         default=5,
         min=1,
         max=30,
-        description="多段 prompt 之间的过渡帧数",
+        description="多段提示词之间的过渡帧数",
     )
     bpy.types.Scene.kimodo_path_curve = PointerProperty(
         name="路径曲线",

@@ -308,23 +308,23 @@ def translate_if_needed(
         return prompt, None
 
     if mode == "OFF":
-        return prompt, "warning: 中文原文提交（翻译已关闭，Kimodo 英文效果最佳）"
+        return prompt, "警告：中文原文已提交（翻译已关闭，Kimodo 的英文提示词效果最佳）"
 
     # L1
     l1 = try_dict_match(prompt)
     if l1:
         final = normalize_humanml3d(l1)
-        return final, f"zh→en 词典: {final}"
+        return final, f"中译英（词典）：{final}"
 
     # DICT-only 模式，未命中 → 原文
     if mode == "DICT":
-        return prompt, "warning: 词典未命中，原文提交（建议开启 AI 翻译）"
+        return prompt, "警告：词典未命中，已提交原文（建议开启 AI 翻译）"
 
     # API
     en, err = api_translate(prompt, api_url, api_key, model, timeout)
     if en:
         final = normalize_humanml3d(en)
-        return final, f"zh→en AI: {final}"
+        return final, f"中译英（AI）：{final}"
 
     # API failed → 原文
-    return prompt, f"warning: API 翻译失败 ({err})，原文提交"
+    return prompt, f"警告：API 翻译失败（{err}），已提交原文"

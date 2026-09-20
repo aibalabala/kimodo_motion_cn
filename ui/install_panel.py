@@ -42,7 +42,7 @@ _PRECHECK_LOCK = threading.Lock()
 
 
 def _addon_dir() -> Path:
-    """Return the kimodo_motion/ root on disk."""
+    """Return the kimodo_motion_cn/ root on disk."""
     return Path(__file__).resolve().parent.parent
 
 
@@ -80,7 +80,7 @@ def _run_precheck_sync() -> dict[str, Any]:
     precheck = _installer_dir() / "precheck.py"
     if not precheck.is_file():
         return {
-            "errors": [f"precheck.py missing at {precheck}"],
+            "errors": [f"缺少环境检查脚本：{precheck}"],
             "next_action": "run_install",
         }
 
@@ -111,14 +111,14 @@ def _run_precheck_sync() -> dict[str, Any]:
         )
         if p.returncode != 0:
             return {
-                "errors": [f"precheck rc={p.returncode}: {(p.stderr or '')[:300]}"],
+                "errors": [f"环境检查失败（返回码 {p.returncode}）：{(p.stderr or '')[:300]}"],
                 "next_action": "run_install",
             }
         return json.loads(p.stdout or "{}")
     except subprocess.TimeoutExpired:
-        return {"errors": ["precheck timeout (45s)"], "next_action": "run_install"}
+        return {"errors": ["环境检查超时（45 秒）"], "next_action": "run_install"}
     except Exception as e:  # noqa: BLE001
-        return {"errors": [f"precheck exec error: {e}"], "next_action": "run_install"}
+        return {"errors": [f"执行环境检查时出错：{e}"], "next_action": "run_install"}
 
 
 def _refresh_precheck_async() -> None:
@@ -163,7 +163,7 @@ def _get_cached_precheck(max_age: float = 10.0) -> dict[str, Any]:
 
 class KIMODO_OT_install_runtime(Operator):
     bl_idname = "kimodo.install_runtime"
-    bl_label = "一键安装 Runtime"
+    bl_label = "一键安装运行环境"
     bl_description = (
         "打开终端窗口运行安装脚本（Windows: install.ps1 / macOS: install_mac.sh）。"
         "会装 Python venv + PyTorch + kimodo + fastapi 服务依赖。"
@@ -214,7 +214,7 @@ class KIMODO_OT_install_runtime(Operator):
         if sys.platform == "win32":
             script = _installer_dir() / "install.ps1"
             if not script.is_file():
-                self.report({"ERROR"}, f"install.ps1 not found at {script}")
+                self.report({"ERROR"}, f"找不到安装脚本：{script}")
                 return {"CANCELLED"}
             args = [
                 "powershell.exe",
@@ -246,7 +246,7 @@ class KIMODO_OT_install_runtime(Operator):
 
             script = _installer_dir() / "install_mac.sh"
             if not script.is_file():
-                self.report({"ERROR"}, f"install_mac.sh not found at {script}")
+                self.report({"ERROR"}, f"找不到安装脚本：{script}")
                 return {"CANCELLED"}
             try:
                 os.chmod(script, 0o755)
@@ -292,11 +292,11 @@ class KIMODO_OT_install_runtime(Operator):
 class KIMODO_OT_refresh_precheck(Operator):
     bl_idname = "kimodo.refresh_precheck"
     bl_label = "重新检查"
-    bl_description = "重新运行 precheck.py 刷新 Runtime 状态"
+    bl_description = "重新运行环境检查脚本并刷新运行环境状态"
 
     def execute(self, context):
         _refresh_precheck_async()
-        self.report({"INFO"}, "Precheck 已在后台执行…")
+        self.report({"INFO"}, "环境检查已在后台执行…")
         return {"FINISHED"}
 
 
@@ -353,8 +353,8 @@ class KIMODO_OT_download_model(Operator):
         layout.prop(self, "mirror")
         layout.prop(self, "skip_llama")
         box = layout.box()
-        box.label(text="LLaMA-3-8B 是 gated model", icon="LOCKED")
-        box.label(text="需先 https://huggingface.co/meta-llama 申请", icon="URL")
+        box.label(text="LLaMA-3-8B 是受限访问模型", icon="LOCKED")
+        box.label(text="需先在 https://huggingface.co/meta-llama 申请权限", icon="URL")
 
     def execute(self, context):
         from ..preferences import get_prefs
@@ -363,7 +363,7 @@ class KIMODO_OT_download_model(Operator):
         prefs = get_prefs()
         venv_py = Path(manager.get_venv_python(prefs.venv_path))  # cross-platform venv python
         if not venv_py.is_file():
-            self.report({"ERROR"}, f"venv python 不存在: {venv_py}")
+            self.report({"ERROR"}, f"虚拟环境中的 Python 不存在：{venv_py}")
             return {"CANCELLED"}
 
         script = _installer_dir() / "download_model.py"
@@ -406,15 +406,15 @@ class KIMODO_OT_download_model(Operator):
 
 class KIMODO_OT_set_venv_to_default(Operator):
     bl_idname = "kimodo.set_venv_to_default"
-    bl_label = "应用默认 venv 路径"
-    bl_description = "把 venv_path 设回当前平台默认路径"
+    bl_label = "应用默认虚拟环境路径"
+    bl_description = "把虚拟环境路径恢复为当前平台的默认值"
 
     def execute(self, context):
         from ..preferences import default_venv_path, get_prefs
 
         default = default_venv_path()
         get_prefs().venv_path = default
-        self.report({"INFO"}, f"venv_path = {default}")
+        self.report({"INFO"}, f"虚拟环境路径 = {default}")
         return {"FINISHED"}
 
 
@@ -442,7 +442,7 @@ def _schedule_install_watcher() -> None:
 
 
 class KIMODO_PT_install(Panel):
-    bl_label = "Runtime 安装"
+    bl_label = "运行环境安装"
     bl_idname = "KIMODO_PT_install"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
@@ -457,7 +457,7 @@ class KIMODO_PT_install(Panel):
 
         # ── Status summary ──
         box = layout.box()
-        box.label(text="Runtime 状态", icon="SYSTEM")
+        box.label(text="运行环境状态", icon="SYSTEM")
 
         if not pc:
             box.label(text="检查中…", icon="SORTTIME")
@@ -494,7 +494,7 @@ class KIMODO_PT_install(Panel):
         else:
             _row("GPU: 未检测", False, "需要 NVIDIA 驱动")
 
-        _row("venv", pc.get("venv_ready", False), pc.get("venv_exe") or "未创建")
+        _row("Python 虚拟环境", pc.get("venv_ready", False), pc.get("venv_exe") or "未创建")
 
         if pyt and "error" not in (pyt or {}):
             # On macOS the relevant backend is MPS (Metal); on Windows it's CUDA.
@@ -507,7 +507,7 @@ class KIMODO_PT_install(Panel):
 
         # Retargeting runs inside Blender on every platform now, so the Autodesk FBX
         # SDK (fbxsdkpy) is never needed.
-        _row("FBX retarget", True, "Blender 内置（无需 fbxsdkpy）")
+        _row("FBX 动作重定向", True, "Blender 内置（无需 fbxsdkpy）")
 
         km = pc.get("kimodo", {})
         _row("kimodo", km.get("installed", False), km.get("version") or "未安装")
@@ -520,14 +520,14 @@ class KIMODO_PT_install(Panel):
 
         hf = pc.get("hf_token", {})
         _row(
-            "HF Token",
+            "HF 访问令牌",
             hf.get("present", False),
             "已登录" if hf.get("present") else "未登录（LLaMA 下载会失败）",
         )
 
         free = pc.get("disk_free_gb", 0)
         _row(
-            f"磁盘剩余 {free} GB", free >= 30, "≥30GB OK" if free >= 30 else "不足 30GB"
+            f"磁盘剩余 {free} GB", free >= 30, "空间充足（≥30 GB）" if free >= 30 else "不足 30 GB"
         )
 
         # ── Errors / warnings ──
@@ -541,7 +541,7 @@ class KIMODO_PT_install(Panel):
         col = layout.column(align=True)
 
         if next_action == "ok":
-            col.label(text="Runtime 就绪 ✓", icon="CHECKMARK")
+            col.label(text="运行环境已就绪 ✓", icon="CHECKMARK")
         else:
             sub = col.column(align=True)
             sub.scale_y = 1.5

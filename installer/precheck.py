@@ -359,7 +359,7 @@ def run(probe_venv: bool = True, venv_path: str | None = None) -> dict[str, Any]
         try:
             cc = float(gpu["compute_cap"])
             if cc < 8.0:
-                warnings.append(f"Compute capability {cc} < 8.0 — 推荐 RTX 30/40/50 系")
+                warnings.append(f"GPU 计算能力 {cc} < 8.0 — 推荐 RTX 30/40/50 系")
         except (TypeError, ValueError):
             pass
         if gpu.get("vram_gb") and gpu["vram_gb"] < 16:
@@ -384,7 +384,7 @@ def run(probe_venv: bool = True, venv_path: str | None = None) -> dict[str, Any]
         kimodo_info["installed"] = bool(k.get("installed"))
         kimodo_info["version"] = k.get("version")
         if "_probe_error" in probe:
-            warnings.append(f"venv probe: {probe['_probe_error']}")
+            warnings.append(f"虚拟环境检查：{probe['_probe_error']}")
 
     cached, size_gb = _hf_model_cached(_hf_hub_candidates(venv_dir))
     kimodo_info["model_cached"] = cached
@@ -397,26 +397,26 @@ def run(probe_venv: bool = True, venv_path: str | None = None) -> dict[str, Any]
     # Only claim pytorch/fbxsdkpy/kimodo are missing when we actually probed —
     # with --no-venv-probe the defaults (null/False) mean "not checked", not "absent".
     if not venv_ready:
-        errors.append(f"venv not found: {venv_dir}")
+        errors.append(f"找不到 Python 虚拟环境：{venv_dir}")
     if venv_ready and probe_venv:
         if pytorch is None:
-            errors.append("PyTorch not installed in venv")
+            errors.append("Python 虚拟环境中未安装 PyTorch")
         elif "error" in pytorch:
-            errors.append(f"PyTorch import error: {pytorch['error']}")
+            errors.append(f"导入 PyTorch 时出错：{pytorch['error']}")
         elif is_mac:
             # On macOS the accelerator is MPS, never CUDA. A missing MPS backend is a
             # soft fallback to CPU (slow but works), not a version mismatch.
             if not pytorch.get("mps_available"):
                 warnings.append("PyTorch 已装但 MPS 不可用 — 将用 CPU（较慢）")
         elif not pytorch.get("cuda_available"):
-            errors.append("PyTorch installed but CUDA unavailable — 版本不匹配")
+            errors.append("PyTorch 已安装，但 CUDA 不可用 — 版本可能不匹配")
         # NOTE: fbxsdkpy is NO LONGER required on any platform — retargeting runs
         # inside Blender (retarget/bpy_retarget.py). The probe field is kept for the
         # JSON contract, but its absence is not an error and must not gate next_action.
         if not kimodo_info["installed"]:
-            errors.append("kimodo not installed")
+            errors.append("未安装 Kimodo")
     if not hf["present"] and kimodo_info["installed"] and not kimodo_info["model_cached"]:
-        warnings.append("HuggingFace token 未设置 — LLaMA-3-8B 是 gated model 必须登录")
+        warnings.append("未设置 Hugging Face 访问令牌 — LLaMA-3-8B 是受限模型，必须先登录")
     if disk_free < 30:
         warnings.append(f"磁盘剩余 {disk_free}GB < 30GB — 模型要 17GB+")
 
