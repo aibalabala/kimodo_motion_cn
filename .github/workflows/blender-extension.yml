@@ -60,7 +60,7 @@ jobs:
           "${BLENDER_BIN}" --factory-startup --command extension build \
             --source-dir "${GITHUB_WORKSPACE}" --output-dir "${PACKAGE_DIR}"
           shopt -s nullglob
-          packages=("${PACKAGE_DIR}"/kimodo_motion-*.zip)
+          packages=("${PACKAGE_DIR}"/kimodo_motion_cn-*.zip)
           if [ "${#packages[@]}" -ne 1 ]; then
             echo "::error::Expected exactly one extension zip, found ${#packages[@]}"
             exit 1
@@ -71,7 +71,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: kimodo_motion-extension
+          name: kimodo_motion_cn-extension
           path: ${{ env.PACKAGE_PATH }}
           if-no-files-found: error
 
